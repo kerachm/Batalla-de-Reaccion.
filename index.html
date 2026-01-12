@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Reaction Time Battle</title>
+  <title>Batalla de Reaccion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: #111;
+      background: radial-gradient(circle at top, #1b1b1b, #000);
       color: white;
       display: flex;
       justify-content: center;
@@ -18,40 +18,76 @@
 
     .game {
       text-align: center;
-      max-width: 400px;
+      max-width: 420px;
       width: 100%;
+      padding: 16px;
     }
 
     .screen {
       background: red;
-      height: 250px;
-      border-radius: 16px;
+      height: 260px;
+      border-radius: 18px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 24px;
+      font-size: 26px;
       cursor: pointer;
       user-select: none;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,.5);
     }
+
+    .screen:hover { transform: translateY(-2px); }
 
     .green {
       background: #00c853;
+      box-shadow: 0 0 0 0 rgba(0,200,83,.7);
+      animation: pulse 0.9s ease-out;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0,200,83,.8); }
+      100% { box-shadow: 0 0 0 28px rgba(0,200,83,0); }
+    }
+
+    .shake { animation: shake 0.35s; }
+    @keyframes shake {
+      0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)}
+    }
+
+    input {
+      padding: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      border: none;
+      text-align: center;
+      font-size: 15px;
     }
 
     button {
-      background: #1d9bf0;
+      background: linear-gradient(135deg,#1d9bf0,#4db5ff);
       border: none;
       color: white;
-      padding: 10px 20px;
-      border-radius: 20px;
+      padding: 10px 22px;
+      border-radius: 22px;
       font-size: 16px;
       cursor: pointer;
+      box-shadow: 0 10px 20px rgba(29,155,240,.35);
+      transition: transform .1s ease, box-shadow .1s ease;
     }
 
-    .score {
-      margin-top: 15px;
-      font-size: 18px;
+    button:active { transform: scale(.97); box-shadow: 0 6px 14px rgba(29,155,240,.25); }
+
+    .score { margin-top: 10px; font-size: 18px; }
+
+    #ranking div { opacity: 0; animation: fadeUp .4s ease forwards; }
+    #ranking div:nth-child(n) { animation-delay: .05s; }
+
+    @keyframes fadeUp {
+      from { transform: translateY(6px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
@@ -81,10 +117,8 @@
   let waiting = false;
   let timeout;
 
-  // Cargar datos guardados
   const savedNick = localStorage.getItem("nickname");
   let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
-
   if (savedNick) nicknameInput.value = savedNick;
 
   function renderRanking() {
@@ -98,26 +132,20 @@
         rankingDiv.appendChild(div);
       });
   }
-
   renderRanking();
 
   function startGame() {
     const nick = nicknameInput.value.trim();
-    if (!nick) {
-      alert("Escribe un nickname primero");
-      return;
-    }
-
+    if (!nick) { alert("Escribe un nickname primero"); return; }
     localStorage.setItem("nickname", nick);
 
     result.textContent = "";
-    screen.classList.remove("green");
+    screen.classList.remove("green","shake");
     screen.style.background = "red";
     screen.textContent = "Espera...";
     waiting = true;
 
     const delay = Math.random() * 3000 + 2000;
-
     timeout = setTimeout(() => {
       screen.classList.add("green");
       screen.textContent = "¡AHORA!";
@@ -129,6 +157,7 @@
   screen.addEventListener("click", () => {
     if (waiting) {
       clearTimeout(timeout);
+      screen.classList.add("shake");
       screen.textContent = "❌ Muy pronto";
       waiting = false;
       return;
@@ -138,7 +167,6 @@
       const reaction = Date.now() - startTime;
       screen.textContent = "Hecho";
       result.textContent = `⏱️ ${nicknameInput.value}: ${reaction} ms`;
-
       ranking.push({ nick: nicknameInput.value, time: reaction });
       localStorage.setItem("ranking", JSON.stringify(ranking));
       renderRanking();
@@ -151,4 +179,5 @@
 </script>
 </body>
 </html>
+
 
