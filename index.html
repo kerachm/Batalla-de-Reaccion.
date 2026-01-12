@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reaction Time Battle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .game {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .screen {
+      background: red;
+      height: 250px;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+      margin-bottom: 20px;
+    }
+
+    .green {
+      background: #00c853;
+    }
+
+    button {
+      background: #1d9bf0;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .score {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game">
+    <h1>⚡ Batalla de Reaccion</h1>
+
+    <input id="nickname" placeholder="Tu nickname" style="padding:8px;width:100%;margin-bottom:10px;border-radius:8px;border:none;text-align:center;" />
+
+    <div id="screen" class="screen">Haz click para empezar</div>
+    <button id="restart">Reiniciar</button>
+    <div class="score" id="result"></div>
+    <div class="score" id="best"></div>
+    <div class="score"><strong>🏆 Ranking local</strong></div>
+    <div id="ranking"></div>
+  </div>
+
+<script>
+  const screen = document.getElementById("screen");
+  const result = document.getElementById("result");
+  const best = document.getElementById("best");
+  const rankingDiv = document.getElementById("ranking");
+  const restart = document.getElementById("restart");
+  const nicknameInput = document.getElementById("nickname");
+
+  let startTime = 0;
+  let waiting = false;
+  let timeout;
+
+  // Cargar datos guardados
+  const savedNick = localStorage.getItem("nickname");
+  let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
+
+  if (savedNick) nicknameInput.value = savedNick;
+
+  function renderRanking() {
+    rankingDiv.innerHTML = "";
+    ranking
+      .sort((a, b) => a.time - b.time)
+      .slice(0, 10)
+      .forEach((r, i) => {
+        const div = document.createElement("div");
+        div.textContent = `${i + 1}. ${r.nick} - ${r.time} ms`;
+        rankingDiv.appendChild(div);
+      });
+  }
+
+  renderRanking();
+
+  function startGame() {
+    const nick = nicknameInput.value.trim();
+    if (!nick) {
+      alert("Escribe un nickname primero");
+      return;
+    }
+
+    localStorage.setItem("nickname", nick);
+
+    result.textContent = "";
+    screen.classList.remove("green");
+    screen.style.background = "red";
+    screen.textContent = "Espera...";
+    waiting = true;
+
+    const delay = Math.random() * 3000 + 2000;
+
+    timeout = setTimeout(() => {
+      screen.classList.add("green");
+      screen.textContent = "¡AHORA!";
+      startTime = Date.now();
+      waiting = false;
+    }, delay);
+  }
+
+  screen.addEventListener("click", () => {
+    if (waiting) {
+      clearTimeout(timeout);
+      screen.textContent = "❌ Muy pronto";
+      waiting = false;
+      return;
+    }
+
+    if (screen.classList.contains("green")) {
+      const reaction = Date.now() - startTime;
+      screen.textContent = "Hecho";
+      result.textContent = `⏱️ ${nicknameInput.value}: ${reaction} ms`;
+
+      ranking.push({ nick: nicknameInput.value, time: reaction });
+      localStorage.setItem("ranking", JSON.stringify(ranking));
+      renderRanking();
+    } else {
+      startGame();
+    }
+  });
+
+  restart.addEventListener("click", startGame);
+</script>
+</body>
+</html>
+
